@@ -20,9 +20,17 @@ public interface Entity extends Metadatable {
     /**
      * Gets the entity's current position
      *
-     * @return Location containing the position of this entity
+     * @return a new copy of Location containing the position of this entity
      */
     public Location getLocation();
+
+    /**
+     * Stores the entity's current position in the provided Location object.<br />
+     * If the provided Location is null this method does nothing and returns null.
+     *
+     * @return The Location object provided or null
+     */
+    public Location getLocation(Location loc);
 
     /**
      * Sets this entity's velocity
@@ -37,6 +45,14 @@ public interface Entity extends Metadatable {
      * @return Current travelling velocity of this entity
      */
     public Vector getVelocity();
+
+    /**
+     * Returns true if the entity is supported by a block. This value is a state
+     * updated by the server and is not recalculated unless the entity moves.
+     *
+     * @return True if entity is on ground.
+     */
+    public boolean isOnGround();
 
     /**
      * Gets the current world this entity resides in
@@ -128,6 +144,13 @@ public interface Entity extends Metadatable {
      * @return True if it is dead.
      */
     public boolean isDead();
+
+    /**
+     * Returns false if the entity has died or been despawned for some other
+     * reason.
+     * @return True if valid.
+     */
+    public boolean isValid();
 
     /**
      * Gets the {@link Server} that contains this Entity

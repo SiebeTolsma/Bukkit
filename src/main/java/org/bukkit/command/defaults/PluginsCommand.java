@@ -1,13 +1,13 @@
 package org.bukkit.command.defaults;
 
 import java.util.Arrays;
-import org.bukkit.ChatColor;
+
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 
-public class PluginsCommand extends Command {
+public class PluginsCommand extends BukkitCommand {
     public PluginsCommand(String name) {
         super(name);
         this.description = "Gets a list of plugins running on the server";
@@ -20,7 +20,7 @@ public class PluginsCommand extends Command {
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
         if (!testPermission(sender)) return true;
 
-        sender.sendMessage("Plugins: " + getPluginList());
+        sender.sendMessage("Plugins " + getPluginList());
         return true;
     }
 
@@ -38,6 +38,6 @@ public class PluginsCommand extends Command {
             pluginList.append(plugin.getDescription().getName());
         }
 
-        return pluginList.toString();
+        return "(" + plugins.length + "): " + pluginList.toString();
     }
 }

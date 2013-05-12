@@ -2,6 +2,8 @@ package org.bukkit.enchantments;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.bukkit.command.defaults.EnchantCommand;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -42,6 +44,11 @@ public abstract class Enchantment {
      * Increases the speed at which a player may mine underwater
      */
     public static final Enchantment WATER_WORKER = new EnchantmentWrapper(6);
+
+    /**
+     * Damages the attacker
+     */
+    public static final Enchantment THORNS = new EnchantmentWrapper(7);
 
     /**
      * Increases damage against all targets
@@ -160,7 +167,16 @@ public abstract class Enchantment {
     public abstract EnchantmentTarget getItemTarget();
 
     /**
-     * Checks if this Enchantment may be applied to the given {@link ItemStack}
+     * Check if this enchantment conflicts with another enchantment.
+     *
+     * @param other The enchantment to check against
+     * @return True if there is a conflict.
+     */
+    public abstract boolean conflictsWith(Enchantment other);
+
+    /**
+     * Checks if this Enchantment may be applied to the given {@link ItemStack}.
+     * This does not check if it conflicts with any enchantments already applied to the item.
      *
      * @param item Item to test
      * @return True if the enchantment may be applied, otherwise False
@@ -224,6 +240,7 @@ public abstract class Enchantment {
      */
     public static void stopAcceptingRegistrations() {
         acceptingNew = false;
+        EnchantCommand.buildEnchantments();
     }
 
     /**

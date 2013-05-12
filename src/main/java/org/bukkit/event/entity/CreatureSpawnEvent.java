@@ -9,7 +9,7 @@ import org.bukkit.event.HandlerList;
 
 /**
  * Called when a creature is spawned into a world.
- * <p />
+ * <p>
  * If a Creature Spawn event is cancelled, the creature will not spawn.
  */
 public class CreatureSpawnEvent extends EntityEvent implements Cancellable {
@@ -54,7 +54,7 @@ public class CreatureSpawnEvent extends EntityEvent implements Cancellable {
      * Gets the type of creature being spawned.
      *
      * @return A CreatureType value detailing the type of creature being spawned
-     * @deprecated In favour of {@link #getSpawnedType()}.
+     * @deprecated In favour of {@link #getEntityType()}.
      */
     @Deprecated
     public CreatureType getCreatureType() {
@@ -114,15 +114,46 @@ public class CreatureSpawnEvent extends EntityEvent implements Cancellable {
         LIGHTNING,
         /**
          * When a creature is spawned by a player that is sleeping
+         *
+         * @deprecated No longer used
          */
+        @Deprecated
         BED,
         /**
          * When a snowman is spawned by being built
          */
         BUILD_SNOWMAN,
         /**
-         * When a creature is manually spawned
+         * When an iron golem is spawned by being built
          */
-        CUSTOM
+        BUILD_IRONGOLEM,
+        /**
+         * When a wither boss is spawned by being built
+         */
+        BUILD_WITHER,
+        /**
+         * When an iron golem is spawned to defend a village
+         */
+        VILLAGE_DEFENSE,
+        /**
+         * When a zombie is spawned to invade a village
+         */
+        VILLAGE_INVASION,
+        /**
+         * When an animal breeds to create a child
+         */
+        BREEDING,
+        /**
+         * When a slime splits
+         */
+        SLIME_SPLIT,
+        /**
+         * When a creature is spawned by plugins
+         */
+        CUSTOM,
+        /**
+         * When an entity is missing a SpawnReason
+         */
+        DEFAULT
     }
 }

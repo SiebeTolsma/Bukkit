@@ -37,11 +37,7 @@ public class TellCommand extends VanillaCommand {
 
             String result = ChatColor.GRAY + sender.getName() + " whispers " + message;
 
-            if (sender instanceof ConsoleCommandSender) {
-                Bukkit.getLogger().info("[" + sender.getName() + "->" + player.getName() + "] " + message);
-                Bukkit.getLogger().info(result);
-            }
-
+            sender.sendMessage("[" + sender.getName() + "->" + player.getName() + "] " + message);
             player.sendMessage(result);
         }
 
@@ -50,6 +46,6 @@ public class TellCommand extends VanillaCommand {
 
     @Override
     public boolean matches(String input) {
-        return input.startsWith("tell ") || input.equalsIgnoreCase("tell");
+        return input.equalsIgnoreCase("tell") || input.equalsIgnoreCase("w") || input.equalsIgnoreCase("msg");
     }
 }

@@ -134,16 +134,16 @@ public class BlockIterator implements Iterator<Block> {
 
         Block lastBlock;
 
-        lastBlock = startBlock.getRelative(reverseFace(mainFace));
+        lastBlock = startBlock.getRelative(mainFace.getOppositeFace());
 
         if (secondError < 0) {
             secondError += gridSize;
-            lastBlock = lastBlock.getRelative(reverseFace(secondFace));
+            lastBlock = lastBlock.getRelative(secondFace.getOppositeFace());
         }
 
         if (thirdError < 0) {
             thirdError += gridSize;
-            lastBlock = lastBlock.getRelative(reverseFace(thirdFace));
+            lastBlock = lastBlock.getRelative(thirdFace.getOppositeFace());
         }
 
         // This means that when the variables are positive, it means that the coord=1 boundary has been crossed
@@ -178,33 +178,8 @@ public class BlockIterator implements Iterator<Block> {
         return a.getX() == b.getX() && a.getY() == b.getY() && a.getZ() == b.getZ();
     }
 
-    private BlockFace reverseFace(BlockFace face) {
-        switch (face) {
-        case UP:
-            return BlockFace.DOWN;
-
-        case DOWN:
-            return BlockFace.UP;
-
-        case NORTH:
-            return BlockFace.SOUTH;
-
-        case SOUTH:
-            return BlockFace.NORTH;
-
-        case EAST:
-            return BlockFace.WEST;
-
-        case WEST:
-            return BlockFace.EAST;
-
-        default:
-            return null;
-        }
-    }
-
     private BlockFace getXFace(Vector direction) {
-        return ((direction.getX() > 0) ? BlockFace.SOUTH : BlockFace.NORTH);
+        return ((direction.getX() > 0) ? BlockFace.EAST : BlockFace.WEST);
     }
 
     private BlockFace getYFace(Vector direction) {
@@ -212,7 +187,7 @@ public class BlockIterator implements Iterator<Block> {
     }
 
     private BlockFace getZFace(Vector direction) {
-        return ((direction.getZ() > 0) ? BlockFace.WEST : BlockFace.EAST);
+        return ((direction.getZ() > 0) ? BlockFace.SOUTH : BlockFace.NORTH);
     }
 
     private double getXLength(Vector direction) {

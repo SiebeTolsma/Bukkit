@@ -9,8 +9,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.Validate;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
@@ -26,6 +30,9 @@ public class ConfigurationSerialization {
         registerClass(Vector.class);
         registerClass(BlockVector.class);
         registerClass(ItemStack.class);
+        registerClass(Color.class);
+        registerClass(PotionEffect.class);
+        registerClass(FireworkEffect.class);
     }
 
     protected ConfigurationSerialization(Class<? extends ConfigurationSerializable> clazz) {
@@ -94,9 +101,7 @@ public class ConfigurationSerialization {
     }
 
     public ConfigurationSerializable deserialize(Map<String, Object> args) {
-        if (args == null) {
-            throw new IllegalArgumentException("Args must not be null");
-        }
+        Validate.notNull(args, "Args must not be null");
 
         ConfigurationSerializable result = null;
         Method method = null;
@@ -165,9 +170,11 @@ public class ConfigurationSerialization {
                 String alias = (String) args.get(SERIALIZED_TYPE_KEY);
 
                 if (alias == null) {
-                    throw new IllegalArgumentException("Specified class does not exist ('" + alias + ")'");
-                } else {
-                    clazz = getClassByAlias(alias);
+                    throw new IllegalArgumentException("Cannot have null alias");
+                }
+                clazz = getClassByAlias(alias);
+                if (clazz == null) {
+                    throw new IllegalArgumentException("Specified class does not exist ('" + alias + "')");
                 }
             } catch (ClassCastException ex) {
                 ex.fillInStackTrace();

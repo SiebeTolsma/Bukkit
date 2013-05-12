@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.bukkit.Warning.WarningState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
@@ -23,8 +24,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scoreboard.ScoreboardManager;
 
 import com.avaje.ebean.config.ServerConfig;
+import org.bukkit.inventory.ItemFactory;
 
 /**
  * Represents the Bukkit core, for version and Server singleton handling
@@ -48,7 +51,7 @@ public final class Bukkit {
 
     /**
      * Attempts to set the {@link Server} singleton.
-     * <p />
+     * <p>
      * This cannot be done if the Server is already set.
      *
      * @param server Server instance
@@ -100,6 +103,14 @@ public final class Bukkit {
 
     public static String getServerId() {
         return server.getServerId();
+    }
+
+    public static String getWorldType() {
+        return server.getWorldType();
+    }
+
+    public static boolean getGenerateStructures() {
+        return server.getGenerateStructures();
     }
 
     public static boolean getAllowNether() {
@@ -234,6 +245,10 @@ public final class Bukkit {
         return server.getAllowFlight();
     }
 
+    public static boolean isHardcore() {
+        return server.isHardcore();
+    }
+
     public static void shutdown() {
         server.shutdown();
     }
@@ -302,6 +317,10 @@ public final class Bukkit {
         return server.getUpdateFolderFile();
     }
 
+    public static long getConnectionThrottle() {
+        return server.getConnectionThrottle();
+    }
+
     public static int getTicksPerAnimalSpawns() {
         return server.getTicksPerAnimalSpawns();
     }
@@ -340,5 +359,45 @@ public final class Bukkit {
 
     public static HelpMap getHelpMap() {
         return server.getHelpMap();
+    }
+
+    public static int getMonsterSpawnLimit() {
+        return server.getMonsterSpawnLimit();
+    }
+
+    public static int getAnimalSpawnLimit() {
+        return server.getAnimalSpawnLimit();
+    }
+
+    public static int getWaterAnimalSpawnLimit() {
+        return server.getWaterAnimalSpawnLimit();
+    }
+
+    public static int getAmbientSpawnLimit() {
+        return server.getAmbientSpawnLimit();
+    }
+
+    public static boolean isPrimaryThread() {
+        return server.isPrimaryThread();
+    }
+
+    public static String getMotd() {
+        return server.getMotd();
+    }
+
+    public static String getShutdownMessage() {
+        return server.getShutdownMessage();
+    }
+
+    public static WarningState getWarningState() {
+        return server.getWarningState();
+    }
+
+    public static ItemFactory getItemFactory() {
+        return server.getItemFactory();
+    }
+
+    public static ScoreboardManager getScoreboardManager() {
+        return server.getScoreboardManager();
     }
 }

@@ -10,6 +10,10 @@ public enum InventoryType {
      */
     DISPENSER(9,"Dispenser"),
     /**
+     * A dropper inventory, with 9 slots of type CONTAINER.
+     */
+    DROPPER(9, "Dropper"),
+    /**
      * A furnace inventory, with a RESULT slot, a CRAFTING slot, and a FUEL slot.
      */
     FURNACE(3,"Furnace"),
@@ -39,7 +43,29 @@ public enum InventoryType {
      * The creative mode inventory, with only 9 QUICKBAR slots and nothing else. (The actual
      * creative interface with the items is client-side and cannot be altered by the server.)
      */
-    CREATIVE(9,"Creative");
+    CREATIVE(9,"Creative"),
+    /**
+     * The merchant inventory, with 2 TRADE-IN slots, and 1 RESULT slot.
+     */
+    MERCHANT(3,"Villager"),
+    /**
+     * The ender chest inventory, with 27 slots.
+     */
+    ENDER_CHEST(27,"Ender Chest"),
+    /**
+     * An anvil inventory, with 2 CRAFTING slots and 1 RESULT slot
+     */
+    ANVIL(3, "Repairing"),
+    /**
+     * A beacon inventory, with 1 CRAFTING slot
+     */
+    BEACON(1, "container.beacon"),
+    /**
+     * A hopper inventory, with 5 slots of type CONTAINER.
+     */
+    HOPPER(5, "Item Hopper"),
+    ;
+
     private final int size;
     private final String title;
 

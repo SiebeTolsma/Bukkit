@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.logging.Level;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,6 +19,7 @@ import org.yaml.snakeyaml.representer.Representer;
 
 /**
  * An implementation of {@link Configuration} which saves all files in Yaml.
+ * Note that this implementation is not synchronized.
  */
 public class YamlConfiguration extends FileConfiguration {
     protected static final String COMMENT_PREFIX = "# ";
@@ -44,9 +46,7 @@ public class YamlConfiguration extends FileConfiguration {
 
     @Override
     public void loadFromString(String contents) throws InvalidConfigurationException {
-        if (contents == null) {
-            throw new IllegalArgumentException("Contents cannot be null");
-        }
+        Validate.notNull(contents, "Contents cannot be null");
 
         Map<?, ?> input;
         try {
@@ -164,12 +164,10 @@ public class YamlConfiguration extends FileConfiguration {
      *
      * @param file Input file
      * @return Resulting configuration
-     * @throws IllegalArgumentException Thrown is file is null
+     * @throws IllegalArgumentException Thrown if file is null
      */
     public static YamlConfiguration loadConfiguration(File file) {
-        if (file == null) {
-            throw new IllegalArgumentException("File cannot be null");
-        }
+        Validate.notNull(file, "File cannot be null");
 
         YamlConfiguration config = new YamlConfiguration();
 
@@ -193,12 +191,10 @@ public class YamlConfiguration extends FileConfiguration {
      *
      * @param stream Input stream
      * @return Resulting configuration
-     * @throws IllegalArgumentException Thrown is stream is null
+     * @throws IllegalArgumentException Thrown if stream is null
      */
     public static YamlConfiguration loadConfiguration(InputStream stream) {
-        if (stream == null) {
-            throw new IllegalArgumentException("Stream cannot be null");
-        }
+        Validate.notNull(stream, "Stream cannot be null");
 
         YamlConfiguration config = new YamlConfiguration();
 

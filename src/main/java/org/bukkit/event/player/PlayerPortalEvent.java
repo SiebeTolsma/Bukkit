@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 /**
- * Called when a player completes the portaling process by standing in a portal
+ * Called when a player is about to teleport because it is in contact with a portal
  */
 public class PlayerPortalEvent extends PlayerTeleportEvent {
     private static final HandlerList handlers = new HandlerList();
@@ -28,7 +28,7 @@ public class PlayerPortalEvent extends PlayerTeleportEvent {
     }
 
     public boolean useTravelAgent() {
-        return useTravelAgent;
+        return useTravelAgent && travelAgent != null;
     }
 
     public TravelAgent getPortalTravelAgent() {

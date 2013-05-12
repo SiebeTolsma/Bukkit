@@ -1,12 +1,13 @@
 package org.bukkit.command.defaults;
 
 import java.util.Arrays;
-import org.bukkit.ChatColor;
+
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-public class ReloadCommand extends Command {
+public class ReloadCommand extends BukkitCommand {
     public ReloadCommand(String name) {
         super(name);
         this.description = "Reloads the server configuration and plugins";
@@ -20,7 +21,7 @@ public class ReloadCommand extends Command {
         if (!testPermission(sender)) return true;
 
         Bukkit.reload();
-        sender.sendMessage(ChatColor.GREEN + "Reload complete.");
+        Command.broadcastCommandMessage(sender, ChatColor.GREEN + "Reload complete.");
 
         return true;
     }

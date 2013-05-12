@@ -8,8 +8,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,8 +21,9 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.Warning;
+import org.bukkit.Warning.WarningState;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.event.Event;
@@ -29,6 +32,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.plugin.AuthorNagException;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
@@ -46,13 +50,43 @@ import com.google.common.collect.ImmutableList;
  * Represents a Java plugin loader, allowing plugins in the form of .jar
  */
 public class JavaPluginLoader implements PluginLoader {
-    private final Server server;
-    protected final Pattern[] fileFilters = new Pattern[] { Pattern.compile("\\.jar$"), };
-    protected final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
-    protected final Map<String, PluginClassLoader> loaders = new HashMap<String, PluginClassLoader>();
+    final Server server;
+    final boolean extended = this.getClass() != JavaPluginLoader.class;
+    boolean warn;
 
+    private final Pattern[] fileFilters0 = new Pattern[] { Pattern.compile("\\.jar$"), };
+    /**
+     * @deprecated Internal field that wasn't intended to be exposed
+     */
+    @Deprecated
+    protected final Pattern[] fileFilters = fileFilters0;
+
+    private final Map<String, Class<?>> classes0 = new HashMap<String, Class<?>>();
+    /**
+     * @deprecated Internal field that wasn't intended to be exposed
+     */
+    @Deprecated
+    protected final Map<String, Class<?>> classes = classes0;
+
+    private final Map<String, PluginClassLoader> loaders0 = new LinkedHashMap<String, PluginClassLoader>();
+    /**
+     * @deprecated Internal field that wasn't intended to be exposed
+     */
+    @Deprecated
+    protected final Map<String, PluginClassLoader> loaders = loaders0;
+
+    /**
+     * This class was not meant to be extended
+     */
+    @Deprecated
     public JavaPluginLoader(Server instance) {
+        Validate.notNull(instance, "Server cannot be null");
         server = instance;
+        warn = instance.getWarningState() != WarningState.OFF;
+        if (extended && warn) {
+            warn = false;
+            instance.getLogger().log(Level.WARNING, "JavaPluginLoader not intended to be extended by " + getClass() + ", and may be final in a future version of Bukkit");
+        }
     }
 
     public Plugin loadPlugin(File file) throws InvalidPluginException {
@@ -70,7 +104,7 @@ public class JavaPluginLoader implements PluginLoader {
         }
 
         File dataFolder = new File(file.getParentFile(), description.getName());
-        File oldDataFolder = getDataFolder(file);
+        File oldDataFolder = extended ? getDataFolder(file) : getDataFolder0(file); // Don't warn on deprecation, but maintain overridability
 
         // Found old data folder
         if (dataFolder.equals(oldDataFolder)) {
@@ -111,10 +145,10 @@ public class JavaPluginLoader implements PluginLoader {
         }
 
         for (String pluginName : depend) {
-            if (loaders == null) {
+            if (loaders0 == null) {
                 throw new UnknownDependencyException(pluginName);
             }
-            PluginClassLoader current = loaders.get(pluginName);
+            PluginClassLoader current = loaders0.get(pluginName);
 
             if (current == null) {
                 throw new UnknownDependencyException(pluginName);
@@ -130,10 +164,10 @@ public class JavaPluginLoader implements PluginLoader {
             urls[0] = file.toURI().toURL();
 
             if (description.getClassLoaderOf() != null) {
-                loader = loaders.get(description.getClassLoaderOf());
+                loader = loaders0.get(description.getClassLoaderOf());
                 loader.addURL(urls[0]);
             } else {
-                loader = new PluginClassLoader(this, urls, getClass().getClassLoader());
+                loader = new PluginClassLoader(this, urls, getClass().getClassLoader(), null);
             }
 
             Class<?> jarClass = Class.forName(description.getMain(), true, loader);
@@ -150,16 +184,36 @@ public class JavaPluginLoader implements PluginLoader {
             throw new InvalidPluginException(ex);
         }
 
-        loaders.put(description.getName(), loader);
+        loaders0.put(description.getName(), loader);
 
         return result;
     }
 
+    /**
+     * @deprecated Relic method from PluginLoader that didn't get purged
+     */
+    @Deprecated
     public Plugin loadPlugin(File file, boolean ignoreSoftDependencies) throws InvalidPluginException {
+        if (warn) {
+            server.getLogger().log(Level.WARNING, "Method \"public Plugin loadPlugin(File, boolean)\" is Deprecated, and may be removed in a future version of Bukkit", new AuthorNagException(""));
+            warn = false;
+        }
         return loadPlugin(file);
     }
 
+    /**
+     * @deprecated Internal method that wasn't intended to be exposed
+     */
+    @Deprecated
     protected File getDataFolder(File file) {
+        if (warn) {
+            server.getLogger().log(Level.WARNING, "Method \"protected File getDataFolder(File)\" is Deprecated, and may be removed in a future version of Bukkit", new AuthorNagException(""));
+            warn = false;
+        }
+        return getDataFolder0(file);
+    }
+
+    private File getDataFolder0(File file) {
         File dataFolder = null;
 
         String filename = file.getName();
@@ -218,20 +272,32 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     public Pattern[] getPluginFileFilters() {
-        return fileFilters;
+        return fileFilters0.clone();
     }
 
+    /**
+     * @deprecated Internal method that wasn't intended to be exposed
+     */
+    @Deprecated
     public Class<?> getClassByName(final String name) {
-        Class<?> cachedClass = classes.get(name);
+        if (warn) {
+            server.getLogger().log(Level.WARNING, "Method \"public Class<?> getClassByName(String)\" is Deprecated, and may be removed in a future version of Bukkit", new AuthorNagException(""));
+            warn = false;
+        }
+        return getClassByName0(name);
+    }
+
+    Class<?> getClassByName0(final String name) {
+        Class<?> cachedClass = classes0.get(name);
 
         if (cachedClass != null) {
             return cachedClass;
         } else {
-            for (String current : loaders.keySet()) {
-                PluginClassLoader loader = loaders.get(current);
+            for (String current : loaders0.keySet()) {
+                PluginClassLoader loader = loaders0.get(current);
 
                 try {
-                    cachedClass = loader.findClass(name, false);
+                    cachedClass = loader.extended ? loader.findClass(name, false) : loader.findClass0(name, false); // Don't warn on deprecation, but maintain overridability
                 } catch (ClassNotFoundException cnfe) {}
                 if (cachedClass != null) {
                     return cachedClass;
@@ -241,9 +307,21 @@ public class JavaPluginLoader implements PluginLoader {
         return null;
     }
 
+    /**
+     * @deprecated Internal method that wasn't intended to be exposed
+     */
+    @Deprecated
     public void setClass(final String name, final Class<?> clazz) {
-        if (!classes.containsKey(name)) {
-            classes.put(name, clazz);
+        if (warn) {
+            server.getLogger().log(Level.WARNING, "Method \"public void setClass(String, Class<?>)\" is Deprecated, and may be removed in a future version of Bukkit", new AuthorNagException(""));
+            warn = false;
+        }
+        setClass0(name, clazz);
+    }
+
+    void setClass0(final String name, final Class<?> clazz) {
+        if (!classes0.containsKey(name)) {
+            classes0.put(name, clazz);
 
             if (ConfigurationSerializable.class.isAssignableFrom(clazz)) {
                 Class<? extends ConfigurationSerializable> serializable = clazz.asSubclass(ConfigurationSerializable.class);
@@ -252,8 +330,20 @@ public class JavaPluginLoader implements PluginLoader {
         }
     }
 
+    /**
+     * @deprecated Internal method that wasn't intended to be exposed
+     */
+    @Deprecated
     public void removeClass(String name) {
-        Class<?> clazz = classes.remove(name);
+        if (warn) {
+            server.getLogger().log(Level.WARNING, "Method \"public void removeClass(String)\" is Deprecated, and may be removed in a future version of Bukkit", new AuthorNagException(""));
+            warn = false;
+        }
+        removeClass0(name);
+    }
+
+    private void removeClass0(String name) {
+        Class<?> clazz = classes0.remove(name);
 
         try {
             if ((clazz != null) && (ConfigurationSerializable.class.isAssignableFrom(clazz))) {
@@ -267,22 +357,32 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener, final Plugin plugin) {
+        Validate.notNull(plugin, "Plugin can not be null");
+        Validate.notNull(listener, "Listener can not be null");
+
         boolean useTimings = server.getPluginManager().useTimings();
         Map<Class<? extends Event>, Set<RegisteredListener>> ret = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
-        Method[] methods;
+        Set<Method> methods;
         try {
-            methods = listener.getClass().getDeclaredMethods();
+            Method[] publicMethods = listener.getClass().getMethods();
+            methods = new HashSet<Method>(publicMethods.length, Float.MAX_VALUE);
+            for (Method method : publicMethods) {
+                methods.add(method);
+            }
+            for (Method method : listener.getClass().getDeclaredMethods()) {
+                methods.add(method);
+            }
         } catch (NoClassDefFoundError e) {
-            Bukkit.getServer().getLogger().severe("Plugin " + plugin.getDescription().getName() + " is attempting to register event " + e.getMessage() + ", which does not exist. Ignoring events registered in " + listener.getClass());
+            plugin.getLogger().severe("Plugin " + plugin.getDescription().getFullName() + " has failed to register events for " + listener.getClass() + " because " + e.getMessage() + " does not exist.");
             return ret;
         }
-        for (int i = 0; i < methods.length; i++) {
-            final Method method = methods[i];
+
+        for (final Method method : methods) {
             final EventHandler eh = method.getAnnotation(EventHandler.class);
             if (eh == null) continue;
-            final Class<?> checkClass = method.getParameterTypes()[0];
-            if (!Event.class.isAssignableFrom(checkClass) || method.getParameterTypes().length != 1) {
-                plugin.getServer().getLogger().severe("Wrong method arguments used for event type registered");
+            final Class<?> checkClass;
+            if (method.getParameterTypes().length != 1 || !Event.class.isAssignableFrom(checkClass = method.getParameterTypes()[0])) {
+                plugin.getLogger().severe(plugin.getDescription().getFullName() + " attempted to register an invalid EventHandler method signature \"" + method.toGenericString() + "\" in " + listener.getClass());
                 continue;
             }
             final Class<? extends Event> eventClass = checkClass.asSubclass(Event.class);
@@ -292,6 +392,30 @@ public class JavaPluginLoader implements PluginLoader {
                 eventSet = new HashSet<RegisteredListener>();
                 ret.put(eventClass, eventSet);
             }
+
+            for (Class<?> clazz = eventClass; Event.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass()) {
+                // This loop checks for extending deprecated events
+                if (clazz.getAnnotation(Deprecated.class) != null) {
+                    Warning warning = clazz.getAnnotation(Warning.class);
+                    WarningState warningState = server.getWarningState();
+                    if (!warningState.printFor(warning)) {
+                        break;
+                    }
+                    plugin.getLogger().log(
+                            Level.WARNING,
+                            String.format(
+                                    "\"%s\" has registered a listener for %s on method \"%s\", but the event is Deprecated." +
+                                    " \"%s\"; please notify the authors %s.",
+                                    plugin.getDescription().getFullName(),
+                                    clazz.getName(),
+                                    method.toGenericString(),
+                                    (warning != null && warning.reason().length() != 0) ? warning.reason() : "Server performance will be affected",
+                                    Arrays.toString(plugin.getDescription().getAuthors().toArray())),
+                            warningState == WarningState.ON ? new AuthorNagException(null) : null);
+                    break;
+                }
+            }
+
             EventExecutor executor = new EventExecutor() {
                 public void execute(Listener listener, Event event) throws EventException {
                     try {
@@ -316,20 +440,17 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     public void enablePlugin(final Plugin plugin) {
-        if (!(plugin instanceof JavaPlugin)) {
-            throw new IllegalArgumentException("Plugin is not associated with this PluginLoader");
-        }
+        Validate.isTrue(plugin instanceof JavaPlugin, "Plugin is not associated with this PluginLoader");
 
         if (!plugin.isEnabled()) {
-            String message = String.format("Enabling %s", plugin.getDescription().getFullName());
-            plugin.getLogger().info(message);
+            plugin.getLogger().info("Enabling " + plugin.getDescription().getFullName());
 
             JavaPlugin jPlugin = (JavaPlugin) plugin;
 
             String pluginName = jPlugin.getDescription().getName();
 
-            if (!loaders.containsKey(pluginName)) {
-                loaders.put(pluginName, (PluginClassLoader) jPlugin.getClassLoader());
+            if (!loaders0.containsKey(pluginName)) {
+                loaders0.put(pluginName, (PluginClassLoader) jPlugin.getClassLoader());
             }
 
             try {
@@ -345,9 +466,7 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     public void disablePlugin(Plugin plugin) {
-        if (!(plugin instanceof JavaPlugin)) {
-            throw new IllegalArgumentException("Plugin is not associated with this PluginLoader");
-        }
+        Validate.isTrue(plugin instanceof JavaPlugin, "Plugin is not associated with this PluginLoader");
 
         if (plugin.isEnabled()) {
             String message = String.format("Disabling %s", plugin.getDescription().getFullName());
@@ -364,14 +483,18 @@ public class JavaPluginLoader implements PluginLoader {
                 server.getLogger().log(Level.SEVERE, "Error occurred while disabling " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
             }
 
-            loaders.remove(jPlugin.getDescription().getName());
+            loaders0.remove(jPlugin.getDescription().getName());
 
             if (cloader instanceof PluginClassLoader) {
                 PluginClassLoader loader = (PluginClassLoader) cloader;
-                Set<String> names = loader.getClasses();
+                Set<String> names = loader.extended ? loader.getClasses() : loader.getClasses0(); // Don't warn on deprecation, but maintain overridability
 
                 for (String name : names) {
-                    removeClass(name);
+                    if (extended) {
+                        removeClass(name);
+                    } else {
+                        removeClass0(name);
+                    }
                 }
             }
         }

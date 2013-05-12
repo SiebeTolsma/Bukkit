@@ -75,10 +75,9 @@ public abstract class PotionEffectType {
     public static final PotionEffectType WATER_BREATHING = new PotionEffectTypeWrapper(13);
 
     /**
-     * Grants invisibility. NOTE: Unusable due to not being implemented by Minecraft.
+     * Grants invisibility.
      */
-    @Deprecated
-    public static final PotionEffectType INVISIBILITY = new PotionEffectTypeWrapper(14); // unimplemented
+    public static final PotionEffectType INVISIBILITY = new PotionEffectTypeWrapper(14);
 
     /**
      * Blinds an entity.
@@ -86,11 +85,9 @@ public abstract class PotionEffectType {
     public static final PotionEffectType BLINDNESS = new PotionEffectTypeWrapper(15);
 
     /**
-     * Allows an entity to see in the dark. NOTE: Unusable due to not being
-     * implemented by Minecraft.
+     * Allows an entity to see in the dark.
      */
-    @Deprecated
-    public static final PotionEffectType NIGHT_VISION = new PotionEffectTypeWrapper(16); // unimplemented
+    public static final PotionEffectType NIGHT_VISION = new PotionEffectTypeWrapper(16);
 
     /**
      * Increases hunger.
@@ -107,12 +104,25 @@ public abstract class PotionEffectType {
      */
     public static final PotionEffectType POISON = new PotionEffectTypeWrapper(19);
 
+    /**
+     * Deals damage to an entity over time and gives the health to the shooter.
+     */
+    public static final PotionEffectType WITHER = new PotionEffectTypeWrapper(20);
+
     private final int id;
 
     protected PotionEffectType(int id) {
         this.id = id;
     }
 
+    /**
+     * Creates a PotionEffect from this PotionEffectType, applying duration modifiers and checks.
+     *
+     * @see PotionBrewer#createEffect(PotionEffectType, int, int)
+     * @param duration time in ticks
+     * @param amplifier the effect's amplifier
+     * @return a resulting potion effect
+     */
     public PotionEffect createEffect(int duration, int amplifier) {
         return Potion.getBrewer().createEffect(this, duration, amplifier);
     }
@@ -172,7 +182,7 @@ public abstract class PotionEffectType {
         return "PotionEffectType[" + id + ", " + getName() + "]";
     }
 
-    private static final PotionEffectType[] byId = new PotionEffectType[20];
+    private static final PotionEffectType[] byId = new PotionEffectType[21];
     private static final Map<String, PotionEffectType> byName = new HashMap<String, PotionEffectType>();
     // will break on updates.
     private static boolean acceptingNew = true;

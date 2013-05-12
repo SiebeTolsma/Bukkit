@@ -102,5 +102,26 @@ public interface PlayerInventory extends Inventory {
      */
     public int getHeldItemSlot();
 
+    /**
+     * Set the slot number of the currently held item.
+     * <p>
+     * This validates whether the slot is between 0 and 8 inclusive.
+     *
+     * @param slot The new slot number
+     * @throws IllegalArgumentException Thrown if slot is not between 0 and 8 inclusive
+     */
+    public void setHeldItemSlot(int slot);
+
+    /**
+     * Clears all matching items from the inventory. Setting either value to -1 will skip it's check,
+     *  while setting both to -1 will clear all items in your inventory unconditionally.
+     *
+     * @param id the id of the item you want to clear from the inventory
+     * @param data the data of the item you want to clear from the inventory
+     *
+     * @return The number of items cleared
+     */
+    public int clear(int id, int data);
+
     public HumanEntity getHolder();
 }

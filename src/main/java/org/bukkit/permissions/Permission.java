@@ -53,7 +53,10 @@ public class Permission {
     public Permission(String name, String description, PermissionDefault defaultValue, Map<String, Boolean> children) {
         this.name = name;
         this.description = (description == null) ? "" : description;
-        this.defaultValue = (defaultValue == null) ? PermissionDefault.FALSE : defaultValue;
+
+        if (defaultValue != null) {
+            this.defaultValue = defaultValue;
+        }
 
         if (children != null) {
             this.children.putAll(children);
@@ -93,7 +96,7 @@ public class Permission {
 
     /**
      * Sets the default value of this permission.
-     * <p />
+     * <p>
      * This will not be saved to disk, and is a temporary operation until the server reloads permissions.
      * Changing this default will cause all {@link Permissible}s that contain this permission to recalculate their permissions
      *
@@ -119,7 +122,7 @@ public class Permission {
 
     /**
      * Sets the description of this permission.
-     * <p />
+     * <p>
      * This will not be saved to disk, and is a temporary operation until the server reloads permissions.
      *
      * @param value The new description to set
@@ -134,7 +137,7 @@ public class Permission {
 
     /**
      * Gets a set containing every {@link Permissible} that has this permission.
-     * <p />
+     * <p>
      * This set cannot be modified.
      *
      * @return Set containing permissibles with this permission
@@ -145,7 +148,7 @@ public class Permission {
 
     /**
      * Recalculates all {@link Permissible}s that contain this permission.
-     * <p />
+     * <p>
      * This should be called after modifying the children, and is automatically called after modifying the default value
      */
     public void recalculatePermissibles() {
@@ -160,7 +163,7 @@ public class Permission {
 
     /**
      * Adds this permission to the specified parent permission.
-     * <p />
+     * <p>
      * If the parent permission does not exist, it will be created and registered.
      *
      * @param name Name of the parent permission
@@ -196,7 +199,7 @@ public class Permission {
 
     /**
      * Loads a list of Permissions from a map of data, usually used from retrieval from a yaml file.
-     * <p />
+     * <p>
      * The data may contain a list of name:data, where the data contains the following keys:
      * default: Boolean true or false. If not specified, false.
      * children: Map<String, Boolean> of child permissions. If not specified, empty list.
@@ -223,7 +226,7 @@ public class Permission {
 
     /**
      * Loads a Permission from a map of data, usually used from retrieval from a yaml file.
-     * <p />
+     * <p>
      * The data may contain the following keys:
      * default: Boolean true or false. If not specified, false.
      * children: Map<String, Boolean> of child permissions. If not specified, empty list.
@@ -239,7 +242,7 @@ public class Permission {
 
     /**
      * Loads a Permission from a map of data, usually used from retrieval from a yaml file.
-     * <p />
+     * <p>
      * The data may contain the following keys:
      * default: Boolean true or false. If not specified, false.
      * children: Map<String, Boolean> of child permissions. If not specified, empty list.
@@ -258,50 +261,39 @@ public class Permission {
         String desc = null;
         Map<String, Boolean> children = null;
 
-        if (data.containsKey("default")) {
-            try {
-                PermissionDefault value = PermissionDefault.getByName(data.get("default").toString());
-                if (value != null) {
-                    def = value;
-                } else {
-                    throw new IllegalArgumentException("'default' key contained unknown value");
+        if (data.get("default") != null) {
+            PermissionDefault value = PermissionDefault.getByName(data.get("default").toString());
+            if (value != null) {
+                def = value;
+            } else {
+                throw new IllegalArgumentException("'default' key contained unknown value");
+            }
+        }
+
+        if (data.get("children") != null) {
+            Object childrenNode = data.get("children");
+            if (childrenNode instanceof Iterable) {
+                children = new LinkedHashMap<String, Boolean>();
+                for (Object child : (Iterable<?>) childrenNode) {
+                    if (child != null) {
+                        children.put(child.toString(), Boolean.TRUE);
+                    }
                 }
-            } catch (ClassCastException ex) {
-                throw new IllegalArgumentException("'default' key is of wrong type", ex);
+            } else if (childrenNode instanceof Map) {
+                children = extractChildren((Map<?,?>) childrenNode, name, def, output);
+            } else {
+                throw new IllegalArgumentException("'children' key is of wrong type");
             }
         }
 
-        if (data.containsKey("children")) {
-            try {
-                children = extractChildren(data, name, def, output);
-            } catch (ClassCastException ex) {
-                throw new IllegalArgumentException("'children' key is of wrong type", ex);
-            }
-        }
-
-        if (data.containsKey("description")) {
+        if (data.get("description") != null) {
             desc = data.get("description").toString();
         }
 
-        Permission result = new Permission(name, desc, def, children);
-
-        if (data.containsKey("parents")) {
-            try {
-                Object parents = data.get("parents");
-
-                if (parents instanceof String) {
-                    result.addParent((String) parents, true);
-                }
-            } catch (ClassCastException ex) {
-                throw new IllegalArgumentException("'parents' key is of wrong type", ex);
-            }
-        }
-
-        return result;
+        return new Permission(name, desc, def, children);
     }
 
-    private static Map<String, Boolean> extractChildren(Map<?, ?> data, String name, PermissionDefault def, List<Permission> output) {
-        Map<?, ?> input = (Map<?, ?>) data.get("children");
+    private static Map<String, Boolean> extractChildren(Map<?, ?> input, String name, PermissionDefault def, List<Permission> output) {
         Map<String, Boolean> children = new LinkedHashMap<String, Boolean>();
 
         for (Map.Entry<?, ?> entry : input.entrySet()) {
@@ -309,18 +301,14 @@ public class Permission {
                 children.put(entry.getKey().toString(), (Boolean) entry.getValue());
             } else if ((entry.getValue() instanceof Map)) {
                 try {
-                    try {
-                        Permission perm = loadPermission(entry.getKey().toString(), (Map<?, ?>) entry.getValue(), def, output);
-                        children.put(perm.getName(), Boolean.valueOf(true));
+                    Permission perm = loadPermission(entry.getKey().toString(), (Map<?, ?>) entry.getValue(), def, output);
+                    children.put(perm.getName(), Boolean.TRUE);
 
-                        if (output != null) {
-                            output.add(perm);
-                        }
-                    } catch (Throwable ex) {
-                        Bukkit.getServer().getLogger().log(Level.SEVERE, "Permission node '" + entry.getKey().toString() + "' in child of " + name + " is invalid", ex);
+                    if (output != null) {
+                        output.add(perm);
                     }
-                } catch (ClassCastException ex) {
-                    throw new IllegalArgumentException("Child '" + entry.getKey().toString() + "' contains invalid map type");
+                } catch (Throwable ex) {
+                    throw new IllegalArgumentException("Permission node '" + entry.getKey().toString() + "' in child of " + name + " is invalid", ex);
                 }
             } else {
                 throw new IllegalArgumentException("Child '" + entry.getKey().toString() + "' contains invalid value");

@@ -139,12 +139,31 @@ public final class SimplePluginManager implements PluginManager {
 
             Collection<String> softDependencySet = description.getSoftDepend();
             if (softDependencySet != null) {
-                softDependencies.put(description.getName(), new LinkedList<String>(softDependencySet));
+                if (softDependencies.containsKey(description.getName())) {
+                    // Duplicates do not matter, they will be removed together if applicable
+                    softDependencies.get(description.getName()).addAll(softDependencySet);
+                } else {
+                    softDependencies.put(description.getName(), new LinkedList<String>(softDependencySet));
+                }
             }
 
             Collection<String> dependencySet = description.getDepend();
             if (dependencySet != null) {
                 dependencies.put(description.getName(), new LinkedList<String>(dependencySet));
+            }
+
+            Collection<String> loadBeforeSet = description.getLoadBefore();
+            if (loadBeforeSet != null) {
+                for (String loadBeforeTarget : loadBeforeSet) {
+                    if (softDependencies.containsKey(loadBeforeTarget)) {
+                        softDependencies.get(loadBeforeTarget).add(description.getName());
+                    } else {
+                        // softDependencies is never iterated, so 'ghost' plugins aren't an issue
+                        Collection<String> shortSoftDependency = new LinkedList<String>();
+                        shortSoftDependency.add(description.getName());
+                        softDependencies.put(loadBeforeTarget, shortSoftDependency);
+                    }
+                }
             }
         }
 
@@ -227,7 +246,6 @@ public final class SimplePluginManager implements PluginManager {
 
                     if (!dependencies.containsKey(plugin)) {
                         softDependencies.remove(plugin);
-                        dependencies.remove(plugin);
                         missingDependency = false;
                         File file = plugins.get(plugin);
                         pluginIterator.remove();
@@ -261,7 +279,7 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Loads the plugin in the specified file
-     * <p />
+     * <p>
      * File must be valid according to the current enabled Plugin interfaces
      *
      * @param file File containing the plugin to load
@@ -309,7 +327,7 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Checks if the given plugin is loaded and returns it when applicable
-     * <p />
+     * <p>
      * Please note that the name of the plugin is case-sensitive
      *
      * @param name Name of the plugin to check
@@ -325,7 +343,7 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Checks if the given plugin is enabled or not
-     * <p />
+     * <p>
      * Please note that the name of the plugin is case-sensitive.
      *
      * @param name Name of the plugin to check
@@ -370,8 +388,9 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void disablePlugins() {
-        for (Plugin plugin : getPlugins()) {
-            disablePlugin(plugin);
+        Plugin[] plugins = getPlugins();
+        for (int i = plugins.length - 1; i >= 0; i--) {
+            disablePlugin(plugins[i]);
         }
     }
 
@@ -424,11 +443,28 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     /**
-     * Calls an event with the given details
+     * Calls an event with the given details.<br>
+     * This method only synchronizes when the event is not asynchronous.
      *
      * @param event Event details
      */
-    public synchronized void callEvent(Event event) {
+    public void callEvent(Event event) {
+        if (event.isAsynchronous()) {
+            if (Thread.holdsLock(this)) {
+                throw new IllegalStateException(event.getEventName() + " cannot be triggered asynchronously from inside synchronized code.");
+            }
+            if (server.isPrimaryThread()) {
+                throw new IllegalStateException(event.getEventName() + " cannot be triggered asynchronously from primary server thread.");
+            }
+            fireEvent(event);
+        } else {
+            synchronized (this) {
+                fireEvent(event);
+            }
+        }
+    }
+
+    private void fireEvent(Event event) {
         HandlerList handlers = event.getHandlers();
         RegisteredListener[] listeners = handlers.getRegisteredListeners();
 
@@ -445,20 +481,15 @@ public final class SimplePluginManager implements PluginManager {
                 if (plugin.isNaggable()) {
                     plugin.setNaggable(false);
 
-                    String author = "<NoAuthorGiven>";
-
-                    if (plugin.getDescription().getAuthors().size() > 0) {
-                        author = plugin.getDescription().getAuthors().get(0);
-                    }
                     server.getLogger().log(Level.SEVERE, String.format(
-                            "Nag author: '%s' of '%s' about the following: %s",
-                            author,
-                            plugin.getDescription().getName(),
+                            "Nag author(s): '%s' of '%s' about the following: %s",
+                            plugin.getDescription().getAuthors(),
+                            plugin.getDescription().getFullName(),
                             ex.getMessage()
                             ));
                 }
             } catch (Throwable ex) {
-                server.getLogger().log(Level.SEVERE, "Could not pass event " + event.getEventName() + " to " + registration.getPlugin().getDescription().getName(), ex);
+                server.getLogger().log(Level.SEVERE, "Could not pass event " + event.getEventName() + " to " + registration.getPlugin().getDescription().getFullName(), ex);
             }
         }
     }
@@ -550,11 +581,11 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void removePermission(Permission perm) {
-        removePermission(perm.getName().toLowerCase());
+        removePermission(perm.getName());
     }
 
     public void removePermission(String name) {
-        permissions.remove(name);
+        permissions.remove(name.toLowerCase());
     }
 
     public void recalculatePermissionDefaults(Permission perm) {

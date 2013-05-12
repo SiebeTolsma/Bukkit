@@ -1,12 +1,19 @@
 package org.bukkit.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
+import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
+import org.bukkit.util.StringUtil;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represents a Command, which executes various tasks upon user input
@@ -48,6 +55,49 @@ public abstract class Command {
     public abstract boolean execute(CommandSender sender, String commandLabel, String[] args);
 
     /**
+     * @deprecated This method is not supported and returns null
+     */
+    @Deprecated
+    public List<String> tabComplete(CommandSender sender, String[] args) {
+        return null;
+    }
+
+    /**
+     * Executed on tab completion for this command, returning a list of options
+     * the player can tab through.
+     *
+     * @param sender Source object which is executing this command
+     * @param alias the alias being used
+     * @param args All arguments passed to the command, split via ' '
+     * @return a list of tab-completions for the specified arguments. This will never be null. List may be immutable.
+     * @throws IllegalArgumentException if sender, alias, or args is null
+     */
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
+        Validate.notNull(sender, "Sender cannot be null");
+        Validate.notNull(args, "Arguments cannot be null");
+        Validate.notNull(alias, "Alias cannot be null");
+
+        if (!(sender instanceof Player) || args.length == 0) {
+            return ImmutableList.of();
+        }
+
+        String lastWord = args[args.length - 1];
+
+        Player senderPlayer = (Player) sender;
+
+        ArrayList<String> matchedPlayers = new ArrayList<String>();
+        for (Player player : sender.getServer().getOnlinePlayers()) {
+            String name = player.getName();
+            if (senderPlayer.canSee(player) && StringUtil.startsWithIgnoreCase(name, lastWord)) {
+                matchedPlayers.add(name);
+            }
+        }
+
+        Collections.sort(matchedPlayers, String.CASE_INSENSITIVE_ORDER);
+        return matchedPlayers;
+    }
+
+    /**
      * Returns the name of this command
      *
      * @return Name of this command
@@ -76,7 +126,7 @@ public abstract class Command {
 
     /**
      * Tests the given {@link CommandSender} to see if they can perform this command.
-     * <p />
+     * <p>
      * If they do not have permission, they will be informed that they cannot do this.
      *
      * @param target User to test
@@ -100,7 +150,7 @@ public abstract class Command {
 
     /**
      * Tests the given {@link CommandSender} to see if they can perform this command.
-     * <p />
+     * <p>
      * No error is sent to the sender.
      *
      * @param target User to test
@@ -110,7 +160,7 @@ public abstract class Command {
         if ((permission == null) || (permission.length() == 0)) {
             return true;
         }
-        
+
         for (String p : permission.split(";")) {
             if (target.hasPermission(p)) {
                 return true;
@@ -276,11 +326,21 @@ public abstract class Command {
     }
 
     public static void broadcastCommandMessage(CommandSender source, String message) {
-        Set<Permissible> users = Bukkit.getPluginManager().getPermissionSubscriptions(Server.BROADCAST_CHANNEL_ADMINISTRATIVE);
-        String result = source.getName() + ": " + message;
-        String colored = ChatColor.GRAY + "(" + result + ")";
+        broadcastCommandMessage(source, message, true);
+    }
 
-        if (!(source instanceof ConsoleCommandSender)) {
+    public static void broadcastCommandMessage(CommandSender source, String message, boolean sendToSource) {
+        String result = source.getName() + ": " + message;
+
+        if (source instanceof BlockCommandSender && ((BlockCommandSender) source).getBlock().getWorld().getGameRuleValue("commandBlockOutput").equalsIgnoreCase("false")) {
+            Bukkit.getConsoleSender().sendMessage(result);
+            return;
+        }
+
+        Set<Permissible> users = Bukkit.getPluginManager().getPermissionSubscriptions(Server.BROADCAST_CHANNEL_ADMINISTRATIVE);
+        String colored = ChatColor.GRAY + "" + ChatColor.ITALIC + "[" + result + "]";
+
+        if (sendToSource && !(source instanceof ConsoleCommandSender)) {
             source.sendMessage(message);
         }
 
@@ -295,5 +355,10 @@ public abstract class Command {
                 }
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getName() + '(' + name + ')';
     }
 }

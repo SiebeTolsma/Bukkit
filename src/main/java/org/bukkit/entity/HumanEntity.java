@@ -29,6 +29,13 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
     public PlayerInventory getInventory();
 
     /**
+     * Get the player's EnderChest inventory
+     *
+     * @return The EnderChest of the player
+     */
+    public Inventory getEnderChest();
+
+    /**
      * If the player currently has an inventory window open, this method will set a
      * property of that window, such as the state of a progress bar.
      * @param prop The property.
@@ -139,4 +146,18 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
      * @param mode New game mode
      */
     public void setGameMode(GameMode mode);
+
+    /**
+     * Check if the player is currently blocking (ie with a sword).
+     *
+     * @return Whether they are blocking.
+     */
+    public boolean isBlocking();
+
+    /**
+     * Get the total amount of experience required for the player to level
+     *
+     * @return Experience required to level up
+     */
+    public int getExpToLevel();
 }

@@ -35,8 +35,8 @@ public interface Block extends Metadatable {
     Block getRelative(int modX, int modY, int modZ);
 
     /**
-     * Gets the block at the given face<br />
-     * <br />
+     * Gets the block at the given face
+     * <p>
      * This method is equal to getRelative(face, 1)
      *
      * @param face Face of this block to return
@@ -46,14 +46,14 @@ public interface Block extends Metadatable {
     Block getRelative(BlockFace face);
 
     /**
-     * Gets the block at the given distance of the given face<br />
-     * <br />
+     * Gets the block at the given distance of the given face
+     * <p>
      * For example, the following method places water at 100,102,100; two blocks
      * above 100,100,100.
      *
      * <pre>
      * Block block = world.getBlockAt(100, 100, 100);
-     * Block shower = block.getFace(BlockFace.UP, 2);
+     * Block shower = block.getRelative(BlockFace.UP, 2);
      * shower.setType(Material.WATER);
      * </pre>
      *
@@ -138,6 +138,14 @@ public interface Block extends Metadatable {
     Location getLocation();
 
     /**
+     * Stores the location of the block in the provided Location object.<br />
+     * If the provided Location is null this method does nothing and returns null.
+     *
+     * @return The Location object provided or null
+     */
+    Location getLocation(Location loc);
+
+    /**
      * Gets the chunk which contains this block
      *
      * @return Containing Chunk
@@ -194,17 +202,15 @@ public interface Block extends Metadatable {
     boolean setTypeIdAndData(int type, byte data, boolean applyPhysics);
 
     /**
-     * Gets the face relation of this block compared to the given block<br />
-     * <br />
+     * Gets the face relation of this block compared to the given block
+     * <p>
      * For example:
-     *
      * <pre>
      * Block current = world.getBlockAt(100, 100, 100);
      * Block target = world.getBlockAt(100, 101, 100);
      *
      * current.getFace(target) == BlockFace.Up;
      * </pre>
-     *
      * <br />
      * If the given block is not connected to this block, null may be returned
      *
@@ -216,7 +222,7 @@ public interface Block extends Metadatable {
     /**
      * Captures the current state of this block. You may then cast that state
      * into any accepted type, such as Furnace or Sign.
-     * <p />
+     * <p>
      * The returned object will never be updated, and you are not guaranteed that
      * (for example) a sign is still a sign after you capture its state.
      *
@@ -230,6 +236,13 @@ public interface Block extends Metadatable {
      * @return Biome type containing this block
      */
     Biome getBiome();
+
+    /**
+     * Sets the biome that this block resides in
+     *
+     * @param bio new Biome type for this block
+     */
+    void setBiome(Biome bio);
 
     /**
      * Returns true if the block is being powered by Redstone.
@@ -278,7 +291,7 @@ public interface Block extends Metadatable {
 
     /**
      * Checks if this block is empty.
-     * <p />
+     * <p>
      * A block is considered empty when {@link #getType()} returns {@link Material#AIR}.
      *
      * @return true if this block is empty
@@ -287,7 +300,7 @@ public interface Block extends Metadatable {
 
     /**
      * Checks if this block is liquid.
-     * <p />
+     * <p>
      * A block is considered liquid when {@link #getType()} returns {@link Material#WATER}, {@link Material#STATIONARY_WATER}, {@link Material#LAVA} or {@link Material#STATIONARY_LAVA}.
      *
      * @return true if this block is liquid

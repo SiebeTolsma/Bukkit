@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.bukkit.Warning.WarningState;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -25,8 +26,11 @@ import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageRecipient;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scoreboard.ScoreboardManager;
 
 import com.avaje.ebean.config.ServerConfig;
+import org.bukkit.inventory.ItemFactory;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * Represents a server implementation
@@ -34,14 +38,14 @@ import com.avaje.ebean.config.ServerConfig;
 public interface Server extends PluginMessageRecipient {
     /**
      * Used for all administrative messages, such as an operator using a command.
-     * <p />
+     * <p>
      * For use in {@link #broadcast(java.lang.String, java.lang.String)}
      */
     public static final String BROADCAST_CHANNEL_ADMINISTRATIVE = "bukkit.broadcast.admin";
 
     /**
      * Used for all announcement messages, such as informing users that a player has joined.
-     * <p />
+     * <p>
      * For use in {@link #broadcast(java.lang.String, java.lang.String)}
      */
     public static final String BROADCAST_CHANNEL_USERS = "bukkit.broadcast.user";
@@ -118,6 +122,20 @@ public interface Server extends PluginMessageRecipient {
     public String getServerId();
 
     /**
+     * Get world type (level-type setting) for default world
+     *
+     * @return The value of level-type (e.g. DEFAULT, FLAT, DEFAULT_1_1)
+     */
+    public String getWorldType();
+
+    /**
+     * Get generate-structures setting
+     *
+     * @return true if structure generation is enabled, false if not
+     */
+    public boolean getGenerateStructures();
+
+    /**
      * Gets whether this server allows the End or not.
      *
      * @return Whether this server allows the End or not.
@@ -159,7 +177,7 @@ public interface Server extends PluginMessageRecipient {
 
     /**
      * Broadcast a message to all players.
-     * <p />
+     * <p>
      * This is the same as calling {@link #broadcast(java.lang.String, java.lang.String)} to {@link #BROADCAST_CHANNEL_USERS}
      *
      * @param message the message
@@ -170,7 +188,7 @@ public interface Server extends PluginMessageRecipient {
     /**
      * Gets the name of the update folder. The update folder is used to safely update
      * plugins at the right moment on a plugin load.
-     * <p />
+     * <p>
      * The update folder name is relative to the plugins folder.
      *
      * @return The name of the update folder
@@ -186,18 +204,25 @@ public interface Server extends PluginMessageRecipient {
     public File getUpdateFolderFile();
 
     /**
+     * Gets the value of the connection throttle setting
+     *
+     * @return the value of the connection throttle setting
+     */
+    public long getConnectionThrottle();
+
+    /**
      * Gets default ticks per animal spawns value
-     * <p />
+     * <p>
      * <b>Example Usage:</b>
      * <ul>
      * <li>A value of 1 will mean the server will attempt to spawn monsters every tick.
      * <li>A value of 400 will mean the server will attempt to spawn monsters every 400th tick.
      * <li>A value below 0 will be reset back to Minecraft's default.
      * </ul>
-     * <p />
+     * <p>
      * <b>Note:</b>
      * If set to 0, animal spawning will be disabled. We recommend using spawn-animals to control this instead.
-     * <p />
+     * <p>
      * Minecraft default: 400.
      *
      * @return The default ticks per animal spawns value
@@ -206,17 +231,17 @@ public interface Server extends PluginMessageRecipient {
 
     /**
      * Gets the default ticks per monster spawns value
-     * <p />
+     * <p>
      * <b>Example Usage:</b>
      * <ul>
      * <li>A value of 1 will mean the server will attempt to spawn monsters every tick.
      * <li>A value of 400 will mean the server will attempt to spawn monsters every 400th tick.
      * <li>A value below 0 will be reset back to Minecraft's default.
      * </ul>
-     * <p />
+     * <p>
      * <b>Note:</b>
      * If set to 0, monsters spawning will be disabled. We recommend using spawn-monsters to control this instead.
-     * <p />
+     * <p>
      * Minecraft default: 1.
      *
      * @return The default ticks per monsters spawn value
@@ -225,7 +250,7 @@ public interface Server extends PluginMessageRecipient {
 
     /**
      * Gets a player object by the given username
-     * <p />
+     * <p>
      * This method may not return objects for offline players
      *
      * @param name Name to look up
@@ -244,7 +269,7 @@ public interface Server extends PluginMessageRecipient {
     /**
      * Attempts to match any players with the given name, and returns a list
      * of all possibly matches
-     * <p />
+     * <p>
      * This list is not sorted in any particular order. If an exact match is found,
      * the returned list will only contain a single result.
      *
@@ -454,6 +479,13 @@ public interface Server extends PluginMessageRecipient {
     public boolean getAllowFlight();
 
     /**
+     * Gets whether the server is in hardcore mode or not.
+     *
+     * @return Whether this server is in hardcore mode or not.
+     */
+    public boolean isHardcore();
+
+    /**
      * Gets whether to use vanilla (false) or exact behaviour (true).
      *
      * Vanilla behaviour: check for collisions and move the player if needed.
@@ -479,7 +511,7 @@ public interface Server extends PluginMessageRecipient {
 
     /**
      * Gets the player by the given name, regardless if they are offline or online.
-     * <p />
+     * <p>
      * This will return an object even if the player does not exist. To this method, all players will exist.
      *
      * @param name Name of the player to retrieve
@@ -600,4 +632,71 @@ public interface Server extends PluginMessageRecipient {
      * @throws IllegalArgumentException If the size is not a multiple of 9.
      */
     Inventory createInventory(InventoryHolder owner, int size, String title);
+
+    /**
+     * Gets user-specified limit for number of monsters that can spawn in a chunk
+     * @return The monster spawn limit
+     */
+    int getMonsterSpawnLimit();
+
+    /**
+     * Gets user-specified limit for number of animals that can spawn in a chunk
+     * @return The animal spawn limit
+     */
+    int getAnimalSpawnLimit();
+
+    /**
+     * Gets user-specified limit for number of water animals that can spawn in a chunk
+     * @return The water animal spawn limit
+     */
+    int getWaterAnimalSpawnLimit();
+
+    /**
+     * Gets user-specified limit for number of ambient mobs that can spawn in a chunk
+     * @return The ambient spawn limit
+     */
+    int getAmbientSpawnLimit();
+
+    /**
+     * Returns true if the current {@link Thread} is the server's primary thread
+     */
+    boolean isPrimaryThread();
+
+    /**
+     * Gets the message that is displayed on the server list
+     *
+     * @return the servers MOTD
+     */
+    String getMotd();
+
+    /**
+     * Gets the default message that is displayed when the server is stopped
+     *
+     * @return the shutdown message
+     */
+    String getShutdownMessage();
+
+    /**
+     * Gets the current warning state for the server
+     *
+     * @return The configured WarningState
+     */
+    public WarningState getWarningState();
+
+    /**
+     * Gets the instance of the item factory (for {@link ItemMeta}).
+     *
+     * @return the item factory
+     * @see ItemFactory
+     */
+    ItemFactory getItemFactory();
+
+    /**
+     * Gets the instance of the scoreboard manager.
+     * <p>
+     * This will only exist after the first world has loaded.
+     *
+     * @return the scoreboard manager or null if no worlds are loaded.
+     */
+    ScoreboardManager getScoreboardManager();
 }

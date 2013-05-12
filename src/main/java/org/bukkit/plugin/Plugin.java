@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.logging.Logger;
 
 import org.bukkit.Server;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
 
@@ -13,10 +13,10 @@ import com.avaje.ebean.EbeanServer;
 
 /**
  * Represents a Plugin
- * <p />
+ * <p>
  * The use of {@link PluginBase} is recommended for actual Implementation
  */
-public interface Plugin extends CommandExecutor {
+public interface Plugin extends TabExecutor {
     /**
      * Returns the folder that the plugin data's files are located in. The
      * folder may not yet exist.
@@ -58,6 +58,7 @@ public interface Plugin extends CommandExecutor {
     /**
      * Saves the raw contents of the default config.yml file to the location retrievable by {@link #getConfig()}.
      * If there is no default config.yml embedded in the plugin, an empty config.yml file is saved.
+     * This should fail silently if the config.yml already exists.
      */
     public void saveDefaultConfig();
 
